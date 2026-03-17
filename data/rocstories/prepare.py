@@ -41,8 +41,8 @@ if __name__ == "__main__":
     train_encodings = get_encodings(train_text)
     test_encodings = get_encodings(test_text)
 
-    train_ids = np.array(train_encodings, dtype=np.uint32)
-    val_ids = np.array(test_encodings, dtype=np.uint32)
+    train_ids = np.array(train_encodings, dtype=np.uint16)
+    val_ids = np.array(test_encodings, dtype=np.uint16)
 
     print(f"train has {len(train_ids):,} tokens")
     print(f"val has {len(val_ids):,} tokens")
