@@ -17,13 +17,13 @@ dataset = 'rocstories'
 
 gradient_accumulation_steps = 2
 batch_size = 16
-block_size = 128  # important for stories
+block_size = 256  # important for stories
 
 # model size (balanced for performance vs speed)
 n_layer = 6
 n_head = 6
 n_embd = 384
-dropout = 0.1   # less than shakespeare
+dropout = 0.05   # less than shakespeare
 
 learning_rate = 3e-4   # VERY IMPORTANT (lower than shakespeare)
 max_iters = 6000
