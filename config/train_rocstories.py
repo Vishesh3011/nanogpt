@@ -1,5 +1,5 @@
 dataset = 'rocstories'
-device = 'cpu' # or 'cpu'
+device = 'cuda' # or 'cpu'
 compile = False
 
 out_dir = 'out-rocstories'
