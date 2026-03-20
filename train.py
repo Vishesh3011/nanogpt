@@ -130,6 +130,29 @@ def get_batch(split):
         x, y = x.to(device), y.to(device)
     return x, y
 
+# def get_batch(split):
+#     data = np.memmap(os.path.join(data_dir, 'train.bin' if split == 'train' else 'val.bin'), 
+#                      dtype=np.uint16, mode='r')
+    
+#     # find all story boundaries (endoftext token = 50256)
+#     eot_positions = np.where(data == 50256)[0]
+    
+#     # sample story-aligned starting positions
+#     story_starts = np.concatenate([[0], eot_positions + 1])
+#     story_starts = story_starts[story_starts < len(data) - block_size]
+    
+#     idx = np.random.randint(0, len(story_starts), size=batch_size)
+#     ix = story_starts[idx]
+    
+#     x = torch.stack([torch.from_numpy((data[i:i+block_size]).astype(np.int64)) for i in ix])
+#     y = torch.stack([torch.from_numpy((data[i+1:i+1+block_size]).astype(np.int64)) for i in ix])
+    
+#     if device_type == 'cuda':
+#         x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
+#     else:
+#         x, y = x.to(device), y.to(device)
+#     return x, y
+
 # init these up here, can override if init_from='resume' (i.e. from a checkpoint)
 iter_num = 0
 best_val_loss = 1e9

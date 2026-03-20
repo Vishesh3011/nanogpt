@@ -15,7 +15,7 @@ wandb_run_name = 'nanogpt'
 
 dataset = 'rocstories'
 
-batch_size = 64 # 128
+batch_size = 32 # 128
 gradient_accumulation_steps = 2 # 2
 block_size = 256  # important for stories
 
