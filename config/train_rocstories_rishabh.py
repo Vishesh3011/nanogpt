@@ -23,7 +23,7 @@ block_size = 256  # important for stories
 n_layer = 6
 n_head = 6
 n_embd = 384
-dropout = 0.05   # less than shakespeare
+dropout = 0.15
 
 learning_rate = 3e-4   # VERY IMPORTANT (lower than shakespeare)
 max_iters = 12000
