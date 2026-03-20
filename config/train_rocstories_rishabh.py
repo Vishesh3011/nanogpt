@@ -15,8 +15,8 @@ wandb_run_name = 'nanogpt'
 
 dataset = 'rocstories'
 
-batch_size = 16 # 128
-gradient_accumulation_steps = 4 # 2
+batch_size = 64 # 128
+gradient_accumulation_steps = 2 # 2
 block_size = 256  # important for stories
 
 # model size (balanced for performance vs speed)
@@ -26,10 +26,10 @@ n_embd = 384
 dropout = 0.05   # less than shakespeare
 
 learning_rate = 3e-4   # VERY IMPORTANT (lower than shakespeare)
-max_iters = 6000
-lr_decay_iters = 6000
-min_lr = 3e-5
+max_iters = 12000
+lr_decay_iters = 12000
+min_lr = 1e-6
 
 beta2 = 0.99
 
-warmup_iters = 200
+warmup_iters = 100
