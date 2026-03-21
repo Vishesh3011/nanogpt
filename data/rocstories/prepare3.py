@@ -4,16 +4,21 @@ import numpy as np
 from datasets import load_dataset
 from datasets import Dataset
 
+
 def load_data_from_repo() -> tuple[Dataset, Dataset]:
     dataset = load_dataset("mintujupally/ROCStories")
+    dataset.shuffle()
+    
     train_data = []
     test_data = []
     train_data = dataset['train']
     test_data = dataset['test']
     return (train_data, test_data)
 
+
 def get_story_from_row(row) -> str:
     return row["text"]
+
 
 def get_stories(data) -> tuple[list[str]]:
     stories = []
@@ -22,12 +27,15 @@ def get_stories(data) -> tuple[list[str]]:
         stories.append(story)
     return stories
 
+
 def get_text(stories) -> str:
     return "<|endoftext|>".join(stories) + "<|endoftext|>"
+
 
 def get_encodings(text: str) -> list[int]:
     enc = tiktoken.get_encoding("gpt2")
     return enc.encode(text, allowed_special={"<|endoftext|>"})
+
 
 if __name__ == "__main__":
     train_data, test_data = load_data_from_repo()

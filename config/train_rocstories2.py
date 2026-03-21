@@ -21,7 +21,7 @@ block_size = 256  # important for stories
 
 # model size (balanced for performance vs speed)
 n_layer = 6
-n_head = 6
+n_head = 6  
 n_embd = 384
 dropout = 0.2   # less than shakespeare
 
