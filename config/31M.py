@@ -3,7 +3,7 @@ device = 'cuda' # or 'cpu'
 compile = False
 
 out_dir = 'out-rocstories'
-eval_interval = 500
+eval_interval = 200
 eval_iters = 200
 log_interval = 10
 
@@ -15,20 +15,22 @@ wandb_run_name = 'nanogpt'
 
 dataset = 'rocstories'
 
-batch_size = 128 # 128
-gradient_accumulation_steps = 1 # 2
-block_size = 128  # important for stories
+batch_size = 64 # 128
+gradient_accumulation_steps = 4 # 2
+block_size = 160  # important for stories
 
 # model size (balanced for performance vs speed)
-n_layer = 6
+n_layer = 7
 n_head = 6
 n_embd = 384
-dropout = 0.2
 
-learning_rate = 3e-4   # VERY IMPORTANT (lower than shakespeare)
-max_iters = 15000
-lr_decay_iters = 15000
-min_lr = 1e-6
+dropout = 0.2
+weight_decay = 0.06
+
+learning_rate = 2.5e-4   # VERY IMPORTANT (lower than shakespeare)
+max_iters = 12000
+lr_decay_iters = 12000
+min_lr = 2e-5
 
 beta2 = 0.99
 
