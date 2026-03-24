@@ -1,4 +1,4 @@
-dataset = 'code-gen'
+dataset = 'code_search_net'
 device = 'cuda'
 compile = False
 
@@ -37,4 +37,3 @@ beta2 = 0.99
 dtype = 'float16'
 
 warmup_iters = 200
-
