@@ -11,7 +11,7 @@ from model2 import GPT, GPTConfig
 
 def load_model(out_dir: str, device: torch.device) -> GPT:
     ckpt_path: str = os.path.join(out_dir, "ckpt.pt")
-
+    print(f"Loading model from {ckpt_path}...")
     checkpoint = torch.load(ckpt_path, map_location=device)
 
     config = GPTConfig(**checkpoint["model_args"])
@@ -116,7 +116,7 @@ def generate_text(
 if __name__ == "__main__":
     device: torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    out_dir: str = "out-code"
+    out_dir: str = "out-rocstories"
 
     model: GPT = load_model(out_dir, device)
     enc: tiktoken.Encoding = get_encoder()
