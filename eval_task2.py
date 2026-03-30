@@ -74,6 +74,10 @@ def compute_loss(
 
     return total_loss, total_tokens
 
+def load_test_text(path: str) -> str:
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
+
 def compute_perplexity(
     model: GPT,
     text: str,
@@ -96,7 +100,8 @@ def generate_text(
     enc: tiktoken.Encoding,
     device: torch.device,
     max_new_tokens: int = 100,
-    temperature: float = 0.8
+    temperature: float = 0.8,
+    top_k: int = 200
 ) -> str:
     tokens: List[int] = encode_text(prompt, enc)
 
@@ -104,7 +109,7 @@ def generate_text(
 
     with torch.no_grad():
         # out = model.generate(idx, max_new_tokens=max_new_tokens, temperature=temperature)
-        out = model.generate(idx, max_new_tokens=120, temperature=0.7, top_k=50)
+        out = model.generate(idx, max_new_tokens = max_new_tokens, temperature = temperature, top_k = top_k)
 
     return decode_tokens(out[0].tolist(), enc)
 
@@ -118,17 +123,20 @@ if __name__ == "__main__":
 
     block_size: int = model.config.block_size
 
-    test_prompt: str = "<GO>\n# Description: add two numbers\nfunc add(a int, b int) int { return a + b }\n</GO>"
+    test_txt = load_test_text("data/code_search_net/test.txt")
+    avg_loss, ppl = compute_perplexity(model, test_txt, enc, block_size, device)
+    
+    print
+    print(f"Average Loss: {avg_loss:.4f}")
+    print(f"Perplexity: {ppl:.2f}")
 
-    avg_loss, ppl = compute_perplexity(model, test_prompt, enc, block_size, device)
+    prompt: str = "<GO>\n# Function: reverse\n# Description: reverse a string\nfunc reverse(s string) \n"
 
-    print("----- Perplexity -----")
-    print(f"avg_loss: {avg_loss:.4f}")
-    print(f"ppl     : {ppl:.2f}")
+    generated: str = generate_text(model, prompt, enc, device,max_new_tokens = 80, temperature = 0.6, top_k = 40)
 
-    prompt: str = "<GO>\n# Description: reverse a string\n"
-
-    generated: str = generate_text(model, prompt, enc, device)
+    # truncate at first </GO>
+    if "</GO>" in generated:
+        generated = generated.split("</GO>")[0] + "</GO>"
 
     print("\n----- Generated Output -----")
     print(generated)

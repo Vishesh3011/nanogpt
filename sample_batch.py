@@ -10,15 +10,15 @@ import tiktoken
 from model import GPTConfig, GPT
 
 # -----------------------------------------------------------------------------
-init_from = 'gpt2' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
+init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
 out_dir = 'out' # ignored if init_from is not 'resume'
-start = "FILE:data/rocstories/eval_prompts.txt" # Prompt. Can also specify a file, use as: "FILE:prompt.txt"
+start = "FILE:data/rocstories/eval_stories.txt" # Prompt. Can also specify a file, use as: "FILE:prompt.txt"
 batch_prompts = True # if True, read multiple prompts from the file (one per line)
 output_file = 'samples.jsonl' # file to save generated samples in JSONL format (set to None to disable)
 num_samples = 1 # number of samples to generate for each prompt
 max_new_tokens = 512 # number of tokens generated in each sample``
 seed = 1337
-device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
+device = 'cpu' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
 compile = False # use PyTorch 2.0 to compile the model to be faster
 exec(open('configurator.py').read()) # overrides from command line or config file
@@ -89,7 +89,7 @@ if start.startswith('FILE:'):
     with open(start[5:], 'r', encoding='utf-8') as f:
         if batch_prompts:
             # Read multiple prompts from file (one per line)
-            prompts = [line.rstrip() for line in f.readlines()]
+            prompts = [line.rstrip() for line in f.readlines() if line.strip()]
         else:
             # Read single prompt from file
             prompts = [f.read()]

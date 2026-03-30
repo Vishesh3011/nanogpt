@@ -1,1 +1,0 @@
-python3 data/code_search_net/prepare.py

@@ -1,3 +1,4 @@
 *.bin
 *.pt
 __pycache__/*
+data/code_search_net/test.txt

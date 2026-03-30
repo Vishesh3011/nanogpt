@@ -29,7 +29,7 @@ def get_stories(data) -> tuple[list[str]]:
 
 
 def get_text(stories) -> str:
-    return "<|endoftext|>".join(stories) + "<|endoftext|>"
+    return "<|endoftext|>\n".join(stories) + "<|endoftext|>"
 
 
 def get_encodings(text: str) -> list[int]:

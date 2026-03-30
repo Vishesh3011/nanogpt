@@ -65,6 +65,10 @@ def save_txt(dataset: DatasetDict, base_path: str) -> None:
         for ex in dataset["validation"]:
             f.write(ex["text"] + "\n")
 
+    with open(f"{base_path}/test.txt", "w") as f:
+        for ex in dataset["test"]:
+            f.write(ex["text"] + "\n")
+
 if __name__ == "__main__":
     dataset: DatasetDict = load_data_from_repo()
 

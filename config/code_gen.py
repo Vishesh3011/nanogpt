@@ -15,8 +15,8 @@ wandb_project = 'code-gen'
 wandb_run_name = 'nanogpt'
 
 n_layer = 6
-n_head = 6
-n_embd = 360
+n_head = 7
+n_embd = 350
 
 dropout = 0.1
 
@@ -26,7 +26,7 @@ min_lr = 2e-5
 max_iters = 8000
 lr_decay_iters = max_iters
 
-batch_size = 32
+batch_size = 64
 gradient_accumulation_steps = 2
 block_size = 128
 
