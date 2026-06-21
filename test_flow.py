@@ -233,6 +233,28 @@ def test_param_counts_under_50m():
     assert total_code < 50e6, f"code model {total_code/1e6:.1f}M exceeds 50M"
 
 
+def test_api_health():
+    # spin up test client, hit /health, assert response shape
+    from fastapi.testclient import TestClient
+    from api.main import app
+    client = TestClient(app)
+    res = client.get("/health")
+    assert res.status_code == 200
+    data = res.json()
+    assert "status" in data
+    assert "stories_loaded" in data
+    assert "code_loaded" in data
+
+
+def test_api_generate_story_no_model():
+    # without checkpoints loaded, should return 503 not 500
+    from fastapi.testclient import TestClient
+    from api.main import app
+    client = TestClient(app)
+    res = client.post("/generate/story", json={"prompt": "Once upon a time"})
+    assert res.status_code == 503
+
+
 # ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
@@ -249,6 +271,8 @@ TESTS = [
     ("Perplexity computation",             test_perplexity),
     ("Tokenizer round-trip",               test_tokenizer_roundtrip),
     ("Param counts under 50M",             test_param_counts_under_50m),
+    ("API health endpoint",                test_api_health),
+    ("API generate story (no model)",      test_api_generate_story_no_model),
 ]
 
 
@@ -258,7 +282,7 @@ def main():
     args = parser.parse_args()
 
     print(f"\n{'─'*55}")
-    print("  nanogpt-rebuilt  —  end-to-end smoke test")
+    print("  nanogpt  —  end-to-end smoke test")
     print(f"{'─'*55}")
 
     passed = failed = skipped = 0

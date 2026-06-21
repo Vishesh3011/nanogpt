@@ -12,11 +12,15 @@ train.py supported.
 
 import os
 import pickle
+import modal
+
 
 from core.data_utils import get_batch_aligned
 from core.trainer import run_training
 from core.utils import default_dtype, load_config
 from models.stories.model import default_model_args
+
+app = modal.App("example-get-started")
 
 DATA_DIR = os.path.join("data", "stories")
 
@@ -64,7 +68,7 @@ DEFAULT_CONFIG = {
     "seed": 1337,
 }
 
-
+@app.local_entrypoint()
 def main() -> None:
     cfg = dict(DEFAULT_CONFIG)
     cfg.update(default_model_args())

@@ -1,0 +1,168 @@
+:root {
+    --bg: #1e1e1e;
+    --surface: #2a2a2a;
+    --border: #444;
+    --text: #e0e0e0;
+    --muted: #888;
+    --accent: #4f9cf9;
+    --error: #f87171;
+    --radius: 6px;
+}
+
+[data-theme="light"] {
+    --bg: #f5f5f5;
+    --surface: #ffffff;
+    --border: #ccc;
+    --text: #1a1a1a;
+    --muted: #666;
+    --accent: #2563eb;
+    --error: #dc2626;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, sans-serif;
+    font-size: 15px;
+    padding: 2rem;
+}
+
+.container {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+h1 {
+    font-size: 1.4rem;
+}
+
+#theme-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.3rem 0.8rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+}
+
+.tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.tab {
+    padding: 0.5rem 1.2rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    border-radius: var(--radius);
+    cursor: pointer;
+}
+
+.tab.active {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.tab-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.tab-content.hidden {
+    display: none;
+}
+
+label {
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+textarea,
+input[type="number"] {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: var(--radius);
+    padding: 0.6rem;
+    font-size: 0.95rem;
+    width: 100%;
+}
+
+textarea {
+    resize: vertical;
+    font-family: monospace;
+}
+
+.controls {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.controls label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.controls input {
+    width: 100px;
+}
+
+.generate-btn {
+    padding: 0.6rem 1.4rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.95rem;
+    align-self: flex-start;
+}
+
+.generate-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.output {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    white-space: pre-wrap;
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+pre.output {
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+.error {
+    color: var(--error);
+    font-size: 0.88rem;
+    padding: 0.5rem;
+    border: 1px solid var(--error);
+    border-radius: var(--radius);
+}
+
+.hidden {
+    display: none;
+}

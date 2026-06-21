@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>nanogpt</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>nanogpt</h1>
+            <button id="theme-toggle">☀ Light</button>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="story">Story</button>
+            <button class="tab" data-tab="code">Go Code</button>
+        </div>
+
+        <!-- Story tab -->
+        <div id="story" class="tab-content active">
+            <label>Prompt</label>
+            <textarea id="story-prompt" rows="3" placeholder="Once upon a time..."></textarea>
+            <div class="controls">
+                <label>Max tokens <input type="number" id="story-tokens" value="200" min="10" max="500" /></label>
+                <label>Temperature <input type="number" id="story-temp" value="0.8" step="0.1" min="0.1"
+                        max="2.0" /></label>
+            </div>
+            <button id="story-btn" class="generate-btn">Generate Story</button>
+            <div id="story-error" class="error hidden"></div>
+            <div id="story-output" class="output hidden"></div>
+        </div>
+
+        <!-- Code tab -->
+        <div id="code" class="tab-content hidden">
+            <label>Prompt</label>
+            <textarea id="code-prompt" rows="3"
+                placeholder="<GO>&#10;# Function: add&#10;# Description: add two integers&#10;func add(a int, b int)"></textarea>
+            <div class="controls">
+                <label>Max tokens <input type="number" id="code-tokens" value="128" min="10" max="500" /></label>
+                <label>Temperature <input type="number" id="code-temp" value="0.6" step="0.1" min="0.1"
+                        max="2.0" /></label>
+            </div>
+            <button id="code-btn" class="generate-btn">Generate Code</button>
+            <div id="code-error" class="error hidden"></div>
+            <pre id="code-output" class="output hidden"></pre>
+        </div>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+
+</html>

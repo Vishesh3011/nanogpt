@@ -1,0 +1,8 @@
+torch>=2.0.0
+tiktoken
+fastapi
+uvicorn[standard]
+pydantic>=2.0
+huggingface_hub
+datasets
+numpy
