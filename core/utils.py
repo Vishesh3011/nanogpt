@@ -1,183 +1,159 @@
 """
-core/utils.py
+Shared utilities: config loading/overriding, reproducibility seeding,
+device/dtype setup, and checkpoint load/save helpers.
 
-Miscellaneous helpers shared across both pipelines.
-
-Includes:
-  - set_seed()           : deterministic seeding for reproducibility
-  - get_device_type()    : "cuda" | "cpu" from a device string
-  - load_checkpoint()    : load a ckpt.pt and return (model, state_dict, meta)
-  - parse_config_file()  : replaces the old exec(open('configurator.py')) pattern
-                           with an explicit, importable function
+This replaces the original `configurator.py` "poor man's configurator"
+(which used `exec()` on CLI args) with an explicit, importable function.
 """
-
-from __future__ import annotations
 
 import os
 import sys
 from ast import literal_eval
-from typing import Any
+from contextlib import nullcontext
+from dataclasses import asdict
+from typing import Any, Dict, Optional, Tuple
 
 import torch
-import torch.nn as nn
 
 
 # ---------------------------------------------------------------------------
-# Seeding
+# Config loading / CLI overrides
 # ---------------------------------------------------------------------------
 
-def set_seed(seed: int, device: str = "cpu") -> None:
-    """Set random seeds for reproducible training.
+def load_config(config: Dict[str, Any], argv: Optional[list] = None) -> Dict[str, Any]:
+    """Apply CLI overrides to a base config dict.
+
+    Supports two forms of arguments (mirroring the original configurator.py):
+      - a bare path to a Python file, which is exec'd to override keys
+      - `--key=value` pairs, where value is parsed with `ast.literal_eval`
+        when possible (so ints/floats/bools/None parse correctly), falling
+        back to a raw string otherwise.
 
     Args:
-        seed:   Base integer seed.
-        device: If a CUDA device is specified the CUDA seed is also set.
-    """
-    torch.manual_seed(seed)
-    if "cuda" in device and torch.cuda.is_available():
-        torch.cuda.manual_seed(seed)
-
-
-# ---------------------------------------------------------------------------
-# Device helpers
-# ---------------------------------------------------------------------------
-
-def get_device_type(device: str) -> str:
-    """Return "cuda" or "cpu" from a full device string like "cuda:0".
-
-    Used to decide whether to enable pinned memory, AMP, etc.
-    """
-    return "cuda" if "cuda" in device else "cpu"
-
-
-def best_dtype(device_type: str) -> str:
-    """Return the best floating-point dtype for the given device type.
-
-    Prefers bfloat16 on CUDA if supported (avoids loss scaling), falls back
-    to float16 for older GPUs, and float32 for CPU.
-    """
-    if device_type == "cuda":
-        if torch.cuda.is_available() and torch.cuda.is_bf16_supported():
-            return "bfloat16"
-        return "float16"
-    return "float32"
-
-
-# ---------------------------------------------------------------------------
-# Checkpoint I/O
-# ---------------------------------------------------------------------------
-
-def load_checkpoint(
-    ckpt_path: str,
-    model: nn.Module,
-    device: str,
-    optimizer: torch.optim.Optimizer | None = None,
-) -> dict[str, Any]:
-    """Load a checkpoint saved by core/trainer.py into *model* (and optionally *optimizer*).
-
-    Handles the '_orig_mod.' prefix that torch.compile adds to state-dict keys.
-
-    Args:
-        ckpt_path:  Path to the .pt checkpoint file.
-        model:      An already-instantiated model (same architecture as when saved).
-        device:     Device to load tensors onto.
-        optimizer:  If provided, optimizer state is restored from the checkpoint.
+        config: base configuration dict (mutated copy is returned).
+        argv: argument list to parse (defaults to sys.argv[1:]).
 
     Returns:
-        The raw checkpoint dict (contains 'config', 'iter_num', 'best_val_loss', etc.)
+        A new dict with overrides applied.
     """
-    checkpoint = torch.load(ckpt_path, map_location=device)
+    cfg = dict(config)
+    args = sys.argv[1:] if argv is None else argv
 
-    state_dict = checkpoint["model"]
-    # torch.compile wraps parameter names with '_orig_mod.'; strip it.
+    for arg in args:
+        if "=" not in arg:
+            # treat as a path to a config file to exec for overrides
+            assert not arg.startswith("--"), f"Unexpected flag without value: {arg}"
+            config_file = arg
+            print(f"Overriding config with {config_file}:")
+            with open(config_file) as f:
+                file_globals: Dict[str, Any] = {}
+                exec(f.read(), file_globals)
+            for k, v in file_globals.items():
+                if k.startswith("_"):
+                    continue
+                cfg[k] = v
+        else:
+            assert arg.startswith("--"), f"Expected --key=value, got: {arg}"
+            key, val = arg.split("=", 1)
+            key = key[2:]
+            if key in cfg:
+                try:
+                    attempt = literal_eval(val)
+                except (SyntaxError, ValueError):
+                    attempt = val
+                print(f"Overriding: {key} = {attempt}")
+                cfg[key] = attempt
+            else:
+                raise ValueError(f"Unknown config key: {key}")
+
+    return cfg
+
+
+# ---------------------------------------------------------------------------
+# Reproducibility / device setup
+# ---------------------------------------------------------------------------
+
+def seed_everything(seed: int, seed_offset: int = 0) -> None:
+    """Seed torch (CPU + CUDA) for reproducibility."""
+    torch.manual_seed(seed + seed_offset)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed + seed_offset)
+
+
+def setup_device(device: str, dtype: str) -> Tuple[str, torch.dtype, Any]:
+    """Resolve device type, torch dtype, and an autocast context manager.
+
+    Args:
+        device: e.g. 'cpu', 'cuda', 'cuda:0', 'mps'
+        dtype: one of 'float32', 'bfloat16', 'float16'
+
+    Returns:
+        (device_type, torch_dtype, autocast_context_manager)
+    """
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
+
+    device_type = "cuda" if "cuda" in device else ("mps" if "mps" in device else "cpu")
+    ptdtype = {"float32": torch.float32, "bfloat16": torch.bfloat16, "float16": torch.float16}[dtype]
+
+    if device_type == "cpu":
+        ctx = nullcontext()
+    else:
+        ctx = torch.amp.autocast(device_type=device_type, dtype=ptdtype)
+
+    return device_type, ptdtype, ctx
+
+
+def default_dtype() -> str:
+    """Pick the best available dtype: bfloat16 if supported, else float16."""
+    if torch.cuda.is_available() and torch.cuda.is_bf16_supported():
+        return "bfloat16"
+    return "float16"
+
+
+# ---------------------------------------------------------------------------
+# Checkpoint helpers
+# ---------------------------------------------------------------------------
+
+def strip_compile_prefix(state_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    """Remove the '_orig_mod.' prefix added by torch.compile() to state_dict keys."""
     unwanted_prefix = "_orig_mod."
     for k in list(state_dict.keys()):
         if k.startswith(unwanted_prefix):
             state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
-
-    model.load_state_dict(state_dict)
-
-    if optimizer is not None and "optimizer" in checkpoint:
-        optimizer.load_state_dict(checkpoint["optimizer"])
-
-    return checkpoint
+    return state_dict
 
 
 def save_checkpoint(
     path: str,
-    model: nn.Module,
+    model: torch.nn.Module,
     optimizer: torch.optim.Optimizer,
+    model_args: Dict[str, Any],
     iter_num: int,
     best_val_loss: float,
-    config: dict[str, Any],
+    config: Dict[str, Any],
 ) -> None:
-    """Save a training checkpoint to *path*.
-
-    Args:
-        path:           Full file path (e.g. checkpoints/stories/ckpt.pt).
-        model:          Raw (non-DDP-wrapped) model.
-        optimizer:      Optimizer whose state should be saved.
-        iter_num:       Current training iteration.
-        best_val_loss:  Best validation loss seen so far.
-        config:         Serialisable dict of training config values.
-    """
-    ckpt = {
+    """Save a training checkpoint to `path`."""
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    checkpoint = {
         "model": model.state_dict(),
         "optimizer": optimizer.state_dict(),
+        "model_args": model_args,
         "iter_num": iter_num,
         "best_val_loss": best_val_loss,
         "config": config,
     }
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    torch.save(ckpt, path)
+    torch.save(checkpoint, path)
 
 
-# ---------------------------------------------------------------------------
-# Config parsing (replaces the old configurator.py exec() pattern)
-# ---------------------------------------------------------------------------
+def load_checkpoint(path: str, map_location: str = "cpu") -> Dict[str, Any]:
+    """Load a checkpoint dict and strip any torch.compile prefixes from the state dict."""
+    checkpoint = torch.load(path, map_location=map_location)
+    if "model" in checkpoint:
+        checkpoint["model"] = strip_compile_prefix(checkpoint["model"])
+    return checkpoint
 
-def apply_config_overrides(namespace: dict[str, Any]) -> None:
-    """Apply command-line and config-file overrides to *namespace* in-place.
 
-    This is a clean replacement for the old ``exec(open('configurator.py').read())``
-    pattern.  It reads ``sys.argv[1:]`` and:
-      - Treats bare arguments (no ``=``) as config file paths and execs them.
-      - Treats ``--key=value`` arguments as direct overrides with type-checking.
-
-    Args:
-        namespace: The dict of variables to mutate (typically ``globals()`` of
-                   the calling script, or a dataclass converted to dict).
-
-    Raises:
-        ValueError: If an unknown config key is passed via CLI.
-        AssertionError: If the value type does not match the existing type.
-    """
-    for arg in sys.argv[1:]:
-        if "=" not in arg:
-            # Bare arg → treat as a config file path.
-            assert not arg.startswith("--"), (
-                f"Expected a config file path or --key=value, got: {arg!r}"
-            )
-            config_file = arg
-            print(f"Overriding config with {config_file}:")
-            with open(config_file) as f:
-                src = f.read()
-            print(src)
-            exec(compile(src, config_file, "exec"), namespace)  # noqa: S102
-        else:
-            # --key=value argument.
-            assert arg.startswith("--"), f"Expected --key=value, got: {arg!r}"
-            key, val = arg.split("=", 1)
-            key = key[2:]
-            if key not in namespace:
-                raise ValueError(f"Unknown config key: {key!r}")
-            try:
-                typed_val = literal_eval(val)
-            except (SyntaxError, ValueError):
-                typed_val = val
-            assert type(typed_val) is type(namespace[key]), (
-                f"Type mismatch for key {key!r}: "
-                f"expected {type(namespace[key])}, got {type(typed_val)}"
-            )
-            print(f"Overriding: {key} = {typed_val!r}")
-            namespace[key] = typed_val
+def config_to_dict(config_obj: Any) -> Dict[str, Any]:
+    """Convert a dataclass config (e.g. GPTConfig) to a plain dict."""
+    return asdict(config_obj)

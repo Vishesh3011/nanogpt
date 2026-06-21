@@ -1,40 +1,38 @@
 """
-Stories training config for Colab: scaled-up (~50M param) preset for
-training on TinyStories with more compute.
+Stories training config: the best-performing 31M-param preset from the
+original assignment (formerly config/31M_best_25_21_9600.py).
 
 Usage:
-    python -m models.stories.train configs/stories/train_config_colab.py
+    python -m models.stories.train configs/stories/train_config.py
 """
 
 out_dir = "checkpoints/stories"
-eval_interval = 250
-eval_iters = 100
+eval_interval = 200
+eval_iters = 200
 log_interval = 10
 always_save_checkpoint = True
 
 wandb_log = False
 wandb_project = "nanogpt-stories"
-wandb_run_name = "stories-50M-colab"
+wandb_run_name = "stories-31M"
 
-batch_size = 64
-gradient_accumulation_steps = 4
-block_size = 256
+batch_size = 128
+gradient_accumulation_steps = 1
+block_size = 128
 
-# model size (~50M params)
-n_layer = 8
-n_head = 8
-n_embd = 512
+# model size (~31M params)
+n_layer = 7
+n_head = 6
+n_embd = 384
 
-dropout = 0.1
-weight_decay = 0.05
+dropout = 0.2
+weight_decay = 0.06
 
-learning_rate = 3e-4
-max_iters = 20000
-lr_decay_iters = 20000
-min_lr = 3e-5
+learning_rate = 2.5e-4
+max_iters = 12000
+lr_decay_iters = 12000
+min_lr = 2e-5
 
-beta1 = 0.9
-beta2 = 0.95
-dtype = "bfloat16"
-warmup_iters = 500
-compile = True
+beta2 = 0.99
+dtype = "float16"
+warmup_iters = 200

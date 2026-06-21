@@ -1,61 +1,33 @@
 """
-core/tokenizer.py
+Tokenizer utilities shared by both the stories and code pipelines.
 
-Thin wrapper around tiktoken's GPT-2 BPE tokenizer.
-Both the stories and code pipelines share this tokenizer.
-
-Usage:
-    from core.tokenizer import Tokenizer
-    tok = Tokenizer()
-    ids  = tok.encode("hello world")
-    text = tok.decode(ids)
+Both models use the GPT-2 BPE tokenizer (via tiktoken), with the
+"<|endoftext|>" special token treated as an allowed token for
+sequence/story/function boundaries.
 """
 
-from __future__ import annotations
+from typing import List
 
 import tiktoken
 
-
-# Token id for GPT-2's <|endoftext|> special token.
-EOT_TOKEN_ID: int = 50256
+EOT_TOKEN_STR = "<|endoftext|>"
 
 
-class Tokenizer:
-    """GPT-2 BPE tokenizer backed by tiktoken.
+def get_tokenizer() -> tiktoken.Encoding:
+    """Return the shared GPT-2 BPE tokenizer."""
+    return tiktoken.get_encoding("gpt2")
 
-    This is intentionally a thin wrapper — it exposes only the encode/decode
-    interface that the rest of the codebase needs, so swapping the underlying
-    library later requires changing only this file.
-    """
 
-    def __init__(self) -> None:
-        self._enc = tiktoken.get_encoding("gpt2")
+def get_eot_token_id(enc: tiktoken.Encoding) -> int:
+    """Return the integer id of the end-of-text token for this tokenizer."""
+    return enc.encode(EOT_TOKEN_STR, allowed_special={EOT_TOKEN_STR})[0]
 
-    # ------------------------------------------------------------------
-    # Public interface
-    # ------------------------------------------------------------------
 
-    @property
-    def vocab_size(self) -> int:
-        """Number of tokens in the vocabulary (50257 for GPT-2)."""
-        return self._enc.n_vocab
+def encode(text: str, enc: tiktoken.Encoding) -> List[int]:
+    """Encode text to token ids, allowing the end-of-text special token."""
+    return enc.encode(text, allowed_special={EOT_TOKEN_STR})
 
-    @property
-    def eot_token(self) -> int:
-        """Integer id of the end-of-text special token."""
-        return EOT_TOKEN_ID
 
-    def encode(self, text: str, *, allow_special: bool = True) -> list[int]:
-        """Encode *text* into a list of integer token ids.
-
-        Args:
-            text:          The string to encode.
-            allow_special: If True, the <|endoftext|> token is handled as a
-                           special token rather than encoded literally.
-        """
-        allowed = {"<|endoftext|>"} if allow_special else set()
-        return self._enc.encode(text, allowed_special=allowed)
-
-    def decode(self, token_ids: list[int]) -> str:
-        """Decode a list of integer token ids back to a string."""
-        return self._enc.decode(token_ids)
+def decode(token_ids: List[int], enc: tiktoken.Encoding) -> str:
+    """Decode token ids back to text."""
+    return enc.decode(token_ids)
