@@ -1,8 +1,16 @@
-torch>=2.0.0
-tiktoken
-fastapi
-uvicorn[standard]
-pydantic>=2.0
-huggingface_hub
-datasets
-numpy
+# core ML
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.6.0+cpu
+tiktoken==0.6.0
+
+# API serving
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+pydantic==2.7.1
+
+# data prep + training only (not needed for serving)
+datasets==2.19.0
+numpy==1.26.4
+
+# HuggingFace Hub (weight upload/download)
+huggingface_hub==0.22.2

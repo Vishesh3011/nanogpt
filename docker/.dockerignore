@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Data and checkpoints — never bake these into the image
+data/
+checkpoints/
+*.bin
+*.pt
+*.pth
+
+# Notebooks and dev tools
+notebooks/
+colab/
+*.ipynb
+
+# Tests
+test_flow.py
+
+# Git
+.git/
+.gitignore
+
+# Docs
+README.md
+LICENSE
+
+# OS
+.DS_Store

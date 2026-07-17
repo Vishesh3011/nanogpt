@@ -1,0 +1,41 @@
+# STAGE 1: Prerequisites (Install dependencies and packages)
+FROM python:3.11-slim as builder
+
+WORKDIR /build
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \ 
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.api.txt .
+
+RUN pip install --no-cache-dir --prefix=/install \
+    -r requirements.api.txt
+
+# STAGE 2: Runtime Image
+FROM python:3.11-slim as Runtime
+
+RUN useradd --create-home --shell /bin/bash appuser
+
+WORKDIR /app
+
+COPY --from=builder /install /usr/local
+
+COPY core/ ./core/
+COPY models/ ./models/
+COPY api/ ./api/
+COPY frontend/ ./frontend/
+COPY docker/entrypoint.sh ./entrypoint.sh
+
+RUN chmod +x ./entrypoint.sh
+
+RUN mkdir -p checkpoints/stories checkpoints/code \
+    && chown -R appuser:appuser /app
+
+USER appuser
+
+EXPOSE 8000
+
+ENTRYPOINT [ "./entrypoint.sh" ]
+
+

@@ -1,0 +1,15 @@
+services:
+  nanogpt:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.prod
+    image: nanogpt:prod
+    ports:
+      - "8000:8000"
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - HF_REPO_STORIES=${HF_REPO_STORIES}
+      - HF_REPO_CODE=${HF_REPO_CODE}
+      - STORIES_CKPT_PATH=checkpoints/stories/ckpt.pt
+      - CODE_CKPT_PATH=checkpoints/code/ckpt.pt
+    restart: unless-stopped

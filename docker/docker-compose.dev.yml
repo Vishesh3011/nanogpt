@@ -1,0 +1,18 @@
+services:
+  nanogpt-dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    image: nanogpt:dev
+    ports:
+      - "8000:8000"
+    environment:
+      - STORIES_CKPT_PATH=checkpoints/stories/ckpt.pt
+      - CODE_CKPT_PATH=checkpoints/code/ckpt.pt
+    volumes:
+      - ../core:/app/core
+      - ../api:/app/api
+      - ../frontend:/app/frontend
+      # checkpoints — commented out until local ckpt.pt files exist
+      # - ../checkpoints/stories:/app/checkpoints/stories
+      # - ../checkpoints/code:/app/checkpoints/code
