@@ -1,4 +1,7 @@
 *.bin
 *.pt
-__pycache__/*
 data/*
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
